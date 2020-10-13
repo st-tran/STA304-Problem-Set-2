@@ -63,8 +63,8 @@ Here you discuss subsequent work to be done after this report. This can include 
 
 Bibliography:
 
-1. Canada. "General Social Survey: An Overview, 2019." Statistics Canada. 2019. https://www150.statcan.gc.ca/n1/pub/89f0115x/89f0115x2019001-eng.htm
+1. General Social Survey: An Overview, 2019. (2019, February 20). Retrieved October 12, 2020, from Statistics Canada, Canada website:  https://www150.statcan.gc.ca/n1/pub/89f0115x/89f0115x2019001-eng.htm
 
-2. Canada. "General Social Survey - Family (GSS)." Statistics Canda. 2019. https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
+2. General Social Survey - Family (GSS). (2019, February 7). Retrieved October 12, 2020, from Statistics Canada, Canada website: https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
 
 3. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
