@@ -13,17 +13,25 @@ knitr::opts_chunk$set(echo = FALSE)
 
 Here is where you give a brief (one paragraph overview of your entire paper). This should include some background/introduction, some methodology, results and conclusions.
 
+This data set analyzes how mature Canadians feel about their life, provided certain factors in life. The original Canadian general social survey on family was conducted in 2017. Survey data includes a target population of individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest. 20602 respondents had responded to the survey and is the sample size. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews. A linear regression model was applied in order to observe if a linear relationship exists between the study variable and the auxiliary variables.
+
 ## Introduction
 
 Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
+
+The goal of this analysis is to discover a linear relationship between the outcome variable and the auxiliary variables by utilizing a general approach of linear regression model. In this analysis, the study variable is feelings about life, and five auxiliary variables were selected to test if they indeed have a linear relationship with the outcome variable. The significance of the work is that through this model, an analysis can be built about how adult individuals in Canada feel about their life, considering the input variables. In the subsequent sections, results and discussion are covered to discuss weaknesses and next steps. 
 
 ## Data
 
 Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 
+The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.   
+
 ## Model
 
 Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.  
+
+The selected model is a linear regression model. 
 
 ## Results
 
@@ -31,17 +39,32 @@ Here you will include all results. This includes descriptive statistics, graphs,
 
 Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.
 
+
+
 ## Discussion
 
 Here you will discuss conclusions drawn from the results and comment on how it relates to the original goal of the study (which was specified in the Introduction).
 
+
+
 # Weaknesses
 
 Here we discuss weaknesses of the study, data, analysis, etc. You can also discuss areas for improvement.
+
+
 
 # Next Steps
 
 Here you discuss subsequent work to be done after this report. This can include next steps in terms of statistical analysis (perhaps there is a more efficient algorithm available, or perhaps there is a caveat in the data that would allow for some new technique). Future steps should also be specified in terms of the study setting (eg. including a follow-up survey on something, or a subsequent study that would complement the conclusions of your report).
 
 
+
 ## References
+
+Bibliography:
+
+1. Canada. "General Social Survey: An Overview, 2019." Statistics Canada. 2019. https://www150.statcan.gc.ca/n1/pub/89f0115x/89f0115x2019001-eng.htm
+
+2. Canada. "General Social Survey - Family (GSS)." Statistics Canda. 2019. https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
+
+3. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
