@@ -7,13 +7,17 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(survey)
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(plot3D)
+library(tab)
 ```
 
 ## Abstract
 
-Here is where you give a brief (one paragraph overview of your entire paper). This should include some background/introduction, some methodology, results and conclusions.
-
-This data set analyzes how mature Canadians feel about their life, provided certain factors in life. The original Canadian general social survey on family was conducted in 2017. Survey data includes a target population of individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest. 20602 respondents had responded to the survey and is the sample size. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews. A linear regression model was applied in order to observe if a linear relationship exists between the study variable and the auxiliary variables.
+This data set analyzes how mature Canadians feel about their life, provided certain factors in life. The original Canadian General Social Survey on family was conducted in 2017. Survey data includes a target population of individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest. 20602 respondents had responded to the survey and is the sample size. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews. A linear regression model was applied in order to observe if a linear relationship exists between the study variable and the auxiliary variables.
 
 ## Introduction
 
@@ -25,13 +29,108 @@ The goal of this analysis is to discover a linear relationship between the outco
 
 Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 
-The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.   
+The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.
 
 ## Model
 
-Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.  
+Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.
 
-The selected model is a linear regression model. 
+
+```{r include=FALSE, echo=FALSE, warning=FALSE}
+can_pop_stats <- read.csv("popstats.csv", nrows=15) %>% 
+    select(province=Geographic.name, population=Population..2016) %>% 
+    filter(!(province %in% c("Canada", "Yukon", "Northwest Territories", "Nunavut", "")))
+
+gss_full <- read.csv("gss.csv")
+gss = gss_full %>% # Select only the variables that are used in our model
+    select(c(
+             province,
+             feelings_life,
+             age,
+             income_respondent,
+             place_birth_canada,
+             age_at_first_birth,
+             future_children_intention)) %>%
+    drop_na() # Remove the NA values
+
+# Perform inner join on 'province' for finite population correction
+gss <- inner_join(gss, can_pop_stats, by="province")
+
+# Convert some columns we'll be using as dummy variables to be ordered factors
+gss$income_respondent <- factor(gss$income_respondent, levels=c(
+    "Less than $25,000",
+    "$25,000 to $49,999",
+    "$50,000 to $74,999",
+    "$75,000 to $99,999",
+    "$100,000 to $ 124,999",
+    "$125,000 and more"
+))
+gss$place_birth_canada <- factor(gss$place_birth_canada, levels=c(
+    "Don't know",
+    "Born outside Canada",
+    "Born in Canada"
+))
+gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
+    "Don't know",
+    "No, definitely not",
+    "Probably not",
+    "Unsure",
+    "Probably yes",
+    "Definitely yes"
+))
+```
+
+We are interested in how some variables affect one's feelings towards life (`feelings_life`). To analyze this, we fit a linear regression model with some independent/predictor variables.
+
+The categorical variables are:
+
+- `income_respondent`, a discrete variable contains the income range of the respondent; the possible values are: `r gss$income_respondent %>% sort %>% unique %>% kable(col.names="Income of Respondent")`
+- `future_children_intention`: a discrete variable that records the respondent's attitude towards having children in the future; the possible values are: `r gss$future_children_intention %>% sort %>% unique %>% kable(col.names="Future Children Intention")`
+- `place_birth_canada`: a discrete variable that records whether the respondent was born in Canada; the possible values are: `r gss$place_birth_canada %>% sort %>% unique %>% kable(col.names="Born in Canada?")`
+
+For all of these categorical variables, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline.
+
+The other predictor variables are:
+
+- `age_at_first_birth`: a continuous variable which describes the subject's age when they had their first child
+- `age`: a continuous variable describing the subject's age
+
+```{r}
+scatter3D(
+          x=gss$age_at_first_birth, 
+          y=gss$age, 
+          z=gss$feelings_life, 
+          bty="b2", 
+          theta=50, 
+          phi=40, 
+          xlab="Age at First Birth", 
+          ylab="Age", 
+          zlab="Feelings about Life"
+)
+```
+```{r include=FALSE, warning=FALSE, echo=FALSE}
+
+gss.design <- svydesign(data=gss, ids=~1, strata=gss$province, fpc=gss$population)
+
+model <- svyglm(feelings_life ~
+                age_at_first_birth +
+                age +
+                as.factor(income_respondent) +
+                as.factor(place_birth_canada) +
+                as.factor(future_children_intention),
+            gss.design
+)
+```
+Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a generalized linear model to the survey design, yielding the following model:
+\begin{align*}
+    y =\ &\beta_0 + \beta_1x_1 + \beta_2x_2 \\
+    +\ &\underbrace{\beta_{3a}x_{3a} + \beta_{3b}x_{3b} + \beta_{3c}x_{3c} + \beta_{3d}x_{3d} + \beta_{3e}x_{3e}}_{\text{dummy coding for income}} \\
+    +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
+    +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
+\end{align*}
+```{r}
+model %>% tabglm %>% kable
+```
 
 ## Results
 
@@ -68,3 +167,7 @@ Bibliography:
 2. General Social Survey - Family (GSS). (2019, February 7). Retrieved October 12, 2020, from Statistics Canada, Canada website: https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
 
 3. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
+
+\textcolor{red}{sorry I'll cite this properly later!}
+
+4. Used for finite population correction across strata: https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/pd-pl/Table.cfm?Lang=Eng&T=101&S=50&O=A
