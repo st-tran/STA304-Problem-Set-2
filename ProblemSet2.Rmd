@@ -95,7 +95,7 @@ The other predictor variables are:
 - `age_at_first_birth`: a continuous variable which describes the subject's age when they had their first child
 - `age`: a continuous variable describing the subject's age
 
-```{r}
+```{r, fig.align='center'}
 scatter3D(
           x=gss$age_at_first_birth, 
           y=gss$age, 
@@ -103,12 +103,14 @@ scatter3D(
           bty="b2", 
           theta=50, 
           phi=40, 
+          cex=0.5,
+          font=1,
           xlab="Age at First Birth", 
           ylab="Age", 
           zlab="Feelings about Life"
 )
 ```
-```{r include=FALSE, warning=FALSE, echo=FALSE}
+```{r, include=FALSE, warning=FALSE, echo=FALSE}
 
 gss.design <- svydesign(data=gss, ids=~1, strata=gss$province, fpc=gss$population)
 
@@ -129,7 +131,35 @@ Using the GSS data, we replicated the approach used in the original survey. A si
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
 ```{r}
-model %>% tabglm %>% kable
+model_summary <- model %>% tabglm(latex=T)
+rownames(model_summary) <- c(
+                             "$\\hfill\\beta_0$",
+                             "$\\hfill\\beta_1$",
+                             "$\\hfill\\beta_2$",
+                             "income cat. var",
+                             "income baseline",
+                             "$\\hfill\\beta_{3a}$",
+                             "$\\hfill\\beta_{3b}$",
+                             "$\\hfill\\beta_{3c}$",
+                             "$\\hfill\\beta_{3d}$",
+                             "$\\hfill\\beta_{3e}$",
+                             "birthplace cat. var",
+                             "birthplace baseline",
+                             "$\\hfill\\beta_{4a}$",
+                             "$\\hfill\\beta_{4b}$",
+                             "future children int. cat. var",
+                             "future children int. baseline",
+                             "$\\hfill\\beta_{5a}$",
+                             "$\\hfill\\beta_{5b}$",
+                             "$\\hfill\\beta_{5c}$",
+                             "$\\hfill\\beta_{5d}$",
+                             "$\\hfill\\beta_{5e}$"
+)
+colnames(model_summary)[3] <- "95\\% CI"
+model_summary$Variable <- model_summary$Variable %>% str_replace_all("_", "\\\\_")
+model_summary$Variable <- model_summary$Variable %>% str_replace_all("\\$", "\\\\$")
+#model_summary$Variable <- model_summary$Variable %>% str_replace("\\W*", "")
+model_summary %>% kable(row.names=T, escape=F, "latex")
 ```
 
 ## Results
