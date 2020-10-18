@@ -11,6 +11,7 @@ library(survey)
 library(tidyverse)
 library(dplyr)
 library(knitr)
+library(kableExtra)
 library(plot3D)
 library(tab)
 ```
@@ -30,6 +31,7 @@ The goal of this analysis is to discover a linear relationship between the outco
 Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 
 The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.
+
 
 ## Model
 
@@ -80,22 +82,32 @@ gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
 ))
 ```
 
-We are interested in how some variables affect one's feelings towards life (`feelings_life`). To analyze this, we fit a linear regression model with some independent/predictor variables.
+To predict the probability of a person being happy, which we define as:
+$$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 5 \\ 0, &\text{otherwise}\end{cases} $$
+we fit a logistic regression model with some independent/predictor variables.
 
-The categorical variables are:
-
-- `income_respondent`, a discrete variable contains the income range of the respondent; the possible values are: `r gss$income_respondent %>% sort %>% unique %>% kable(col.names="Income of Respondent")`
-- `future_children_intention`: a discrete variable that records the respondent's attitude towards having children in the future; the possible values are: `r gss$future_children_intention %>% sort %>% unique %>% kable(col.names="Future Children Intention")`
-- `place_birth_canada`: a discrete variable that records whether the respondent was born in Canada; the possible values are: `r gss$place_birth_canada %>% sort %>% unique %>% kable(col.names="Born in Canada?")`
-
-For all of these categorical variables, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline.
+```{r}
+data.frame(
+           gss$income_respondent %>% sort %>% unique,
+           gss$future_children_intention %>% sort %>% unique,
+           c(as.vector(gss$place_birth_canada %>% sort %>% unique), rep("", 3))
+           ) %>% kable(col.names=c(
+                                   "Income of Respondent",
+                                   "Future Children Intention",
+                                   "Born in Canada?"
+                                   ),
+                       caption="Categorical Variables") %>% column_spec(1:3) %>% kable_styling(
+                       latex_options="hold_position"
+)
+```
+For all of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline.
 
 The other predictor variables are:
 
 - `age_at_first_birth`: a continuous variable which describes the subject's age when they had their first child
 - `age`: a continuous variable describing the subject's age
 
-```{r, fig.align='center'}
+<!--```{r, fig.align='center'}
 scatter3D(
           x=gss$age_at_first_birth, 
           y=gss$age, 
@@ -109,27 +121,31 @@ scatter3D(
           ylab="Age", 
           zlab="Feelings about Life"
 )
-```
-```{r, include=FALSE, warning=FALSE, echo=FALSE}
+```-->
 
+```{r, include=FALSE, warning=FALSE, echo=FALSE}
+gss <- gss %>% mutate(happy=feelings_life>=5)
+gss$feelings_life <- as.factor(gss$feelings_life)
 gss.design <- svydesign(data=gss, ids=~1, strata=gss$province, fpc=gss$population)
 
-model <- svyglm(feelings_life ~
+model <- svyglm(happy ~
                 age_at_first_birth +
                 age +
                 as.factor(income_respondent) +
                 as.factor(place_birth_canada) +
                 as.factor(future_children_intention),
-            gss.design
+            gss.design,
+            family=quasibinomial
 )
 ```
-Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a generalized linear model to the survey design, yielding the following model:
+Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a generalized logistic model to the survey design, yielding the following model:
 \begin{align*}
-    y =\ &\beta_0 + \beta_1x_1 + \beta_2x_2 \\
+    \log \left(\frac{h}{1-h}\right) =\ &\beta_0 + \beta_1x_1 + \beta_2x_2 \\
     +\ &\underbrace{\beta_{3a}x_{3a} + \beta_{3b}x_{3b} + \beta_{3c}x_{3c} + \beta_{3d}x_{3d} + \beta_{3e}x_{3e}}_{\text{dummy coding for income}} \\
     +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
+
 ```{r}
 model_summary <- model %>% tabglm(latex=T)
 rownames(model_summary) <- c(
@@ -147,8 +163,8 @@ rownames(model_summary) <- c(
                              "birthplace baseline",
                              "$\\hfill\\beta_{4a}$",
                              "$\\hfill\\beta_{4b}$",
-                             "future children int. cat. var",
-                             "future children int. baseline",
+                             "children int. cat. var",
+                             "children int. baseline",
                              "$\\hfill\\beta_{5a}$",
                              "$\\hfill\\beta_{5b}$",
                              "$\\hfill\\beta_{5c}$",
@@ -158,8 +174,8 @@ rownames(model_summary) <- c(
 colnames(model_summary)[3] <- "95\\% CI"
 model_summary$Variable <- model_summary$Variable %>% str_replace_all("_", "\\\\_")
 model_summary$Variable <- model_summary$Variable %>% str_replace_all("\\$", "\\\\$")
-#model_summary$Variable <- model_summary$Variable %>% str_replace("\\W*", "")
-model_summary %>% kable(row.names=T, escape=F, "latex")
+model_summary %>% kable(row.names=T, escape=F, caption="Logistic Regression Model Summary") %>% kable_styling(latex_options="hold_position")
+
 ```
 
 ## Results
@@ -167,7 +183,6 @@ model_summary %>% kable(row.names=T, escape=F, "latex")
 Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
 
 Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.
-
 
 
 ## Discussion
