@@ -1,6 +1,6 @@
 ---
-title: "Title of Your Report"
-author: "Names of your Group Members"
+title: "Predicting probability of life satisfaction level among adult Canadians with multiple factors in life"
+author: "Steven Tran, Nayoung Kim"
 date: "October 19th 2020"
 output: pdf_document
 ---
@@ -18,7 +18,7 @@ library(tab)
 
 ## Abstract
 
-This data set analyzes how mature Canadians feel about their life, provided certain factors in life. The original Canadian General Social Survey on family was conducted in 2017. Survey data includes a target population of individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest. 20602 respondents had responded to the survey and is the sample size. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews. A linear regression model was applied in order to observe if a linear relationship exists between the study variable and the auxiliary variables.
+This report analyzes how mature Canadians feel about their life, provided certain factors in life. The original Canadian General Social Survey on family was conducted in 2017. Survey data includes a target population of individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest. 20602 respondents had responded to the survey and is the sample size. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews. A linear regression model was applied in order to observe if a linear relationship exists between the study variable and the auxiliary variables.
 
 ## Introduction
 
