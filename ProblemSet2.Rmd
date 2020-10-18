@@ -3,6 +3,9 @@ title: "Title of Your Report"
 author: "Names of your Group Members"
 date: "October 19th 2020"
 output: pdf_document
+header-includes: 
+    - \usepackage{tabularx}
+    - \usepackage{float}
 ---
 
 ```{r setup, include=FALSE}
@@ -44,6 +47,7 @@ can_pop_stats <- read.csv("popstats.csv", nrows=15) %>%
     filter(!(province %in% c("Canada", "Yukon", "Northwest Territories", "Nunavut", "")))
 
 gss_full <- read.csv("gss.csv")
+
 gss = gss_full %>% # Select only the variables that are used in our model
     select(c(
              province,
@@ -52,8 +56,27 @@ gss = gss_full %>% # Select only the variables that are used in our model
              income_respondent,
              place_birth_canada,
              age_at_first_birth,
-             future_children_intention)) %>%
-    drop_na() # Remove the NA values
+             future_children_intention)) %>% drop_na
+#gss_full$future_children_intention[is.na(gss_full$future_children_intention)] <- "Don't know"
+#gss = gss_full %>% # Select only the variables that are used in our model
+#    select(c(
+#             province,
+#             feelings_life,
+#             age,
+#             income_respondent,
+#             place_birth_canada,
+#             age_at_first_birth,
+#             future_children_intention)) %>%
+#replace_na(list(
+#                "",
+#                0, 
+#                0,
+#                "Less than $25,000",
+#                "Don't know",
+#                0,
+#                "Don't know"
+#                )) %>%
+#drop_na() # Remove the NA values
 
 # Perform inner join on 'province' for finite population correction
 gss <- inner_join(gss, can_pop_stats, by="province")
@@ -83,7 +106,7 @@ gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
 ```
 
 To predict the probability of a person being happy, which we define as:
-$$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 5 \\ 0, &\text{otherwise}\end{cases} $$
+$$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 6 \\ 0, &\text{otherwise}\end{cases} $$
 we fit a logistic regression model with some independent/predictor variables.
 
 ```{r}
@@ -100,12 +123,8 @@ data.frame(
                        latex_options="hold_position"
 )
 ```
-For all of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline.
 
-The other predictor variables are:
-
-- `age_at_first_birth`: a continuous variable which describes the subject's age when they had their first child
-- `age`: a continuous variable describing the subject's age
+The other predictor variables are `age_at_first_birth` and `age`.
 
 <!--```{r, fig.align='center'}
 scatter3D(
@@ -124,7 +143,7 @@ scatter3D(
 ```-->
 
 ```{r, include=FALSE, warning=FALSE, echo=FALSE}
-gss <- gss %>% mutate(happy=feelings_life>=5)
+gss <- gss %>% mutate(happy=feelings_life>=6)
 gss$feelings_life <- as.factor(gss$feelings_life)
 gss.design <- svydesign(data=gss, ids=~1, strata=gss$province, fpc=gss$population)
 
@@ -138,16 +157,24 @@ model <- svyglm(happy ~
             family=quasibinomial
 )
 ```
-Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a generalized logistic model to the survey design, yielding the following model:
+Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a logistic model to the survey design, yielding the following model:
 \begin{align*}
     \log \left(\frac{h}{1-h}\right) =\ &\beta_0 + \beta_1x_1 + \beta_2x_2 \\
     +\ &\underbrace{\beta_{3a}x_{3a} + \beta_{3b}x_{3b} + \beta_{3c}x_{3c} + \beta_{3d}x_{3d} + \beta_{3e}x_{3e}}_{\text{dummy coding for income}} \\
     +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
+The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy`. For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
+
+## Results
+
+<!--Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
+
+Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.-->
+The coefficients fitted using the logistic regression model are given in Table 2. The *OR* column gives the odds ratio, *Beta (SE)* gives the logarithm of the odds ratio and corresponding standard error of the estimate. *P* gives the p-value for the significance test which evaluates the probability of encountering data as or more significant than the Wald test statistic.
 
 ```{r}
-model_summary <- model %>% tabglm(latex=T)
+model_summary <- model %>% tabglm(columns=c("or", "beta.se", "p"), latex=T)
 rownames(model_summary) <- c(
                              "$\\hfill\\beta_0$",
                              "$\\hfill\\beta_1$",
@@ -171,35 +198,39 @@ rownames(model_summary) <- c(
                              "$\\hfill\\beta_{5d}$",
                              "$\\hfill\\beta_{5e}$"
 )
-colnames(model_summary)[3] <- "95\\% CI"
 model_summary$Variable <- model_summary$Variable %>% str_replace_all("_", "\\\\_")
 model_summary$Variable <- model_summary$Variable %>% str_replace_all("\\$", "\\\\$")
-model_summary %>% kable(row.names=T, escape=F, caption="Logistic Regression Model Summary") %>% kable_styling(latex_options="hold_position")
-
+model_summary %>% kable(row.names=T, escape=F, caption="Logistic Regression Model Summary") %>% kable_styling(latex_options="HOLD_position")
 ```
+The model has the following interpretations:
 
-## Results
+- The intercept term has no meaningful interpretation and it is statistically significant with a very small p-value.
+- The continuous variables `age_at_first_birth`, `age` very slightly affect the model with odds-ratios slightly off from 1.
+- The categorical variables `place_birth_canada` and `future_children_intention` make a large difference to the odds ratio with odds-ratios near 0, but this is probably due to a flaw in the survey design which we will discuss in the Weaknesses section of this report.
+- `income_respondent` is a meaningful variable in this model. For all six levels, the odds ratio is greater than 1 which implies that each increase in the respondent's income results in an increase in the log odds of being happy compared to the baseline.
 
-Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
+Using a variety of parameters with this model, we obtain the following histogram that shows the class distribution of happiness.
 
-Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.
-
+```{r, fig.width=10, fig.height=3}
+or_probs <- as.data.frame(predict(model, type="response"))
+ggplot(or_probs, aes(x=response)) + 
+    geom_histogram(bins=30) +
+    ggtitle("Predicted Distribution of Happiness") + xlab("Probability of Being Happy")
+```
 
 ## Discussion
 
-Here you will discuss conclusions drawn from the results and comment on how it relates to the original goal of the study (which was specified in the Introduction).
+<!--Here you will discuss conclusions drawn from the results and comment on how it relates to the original goal of the study (which was specified in the Introduction).-->
 
 
 
 # Weaknesses
 
-Here we discuss weaknesses of the study, data, analysis, etc. You can also discuss areas for improvement.
-
-
+<!--Here we discuss weaknesses of the study, data, analysis, etc. You can also discuss areas for improvement.-->
 
 # Next Steps
 
-Here you discuss subsequent work to be done after this report. This can include next steps in terms of statistical analysis (perhaps there is a more efficient algorithm available, or perhaps there is a caveat in the data that would allow for some new technique). Future steps should also be specified in terms of the study setting (eg. including a follow-up survey on something, or a subsequent study that would complement the conclusions of your report).
+<!--Here you discuss subsequent work to be done after this report. This can include next steps in terms of statistical analysis (perhaps there is a more efficient algorithm available, or perhaps there is a caveat in the data that would allow for some new technique). Future steps should also be specified in terms of the study setting (eg. including a follow-up survey on something, or a subsequent study that would complement the conclusions of your report).-->
 
 
 
