@@ -15,19 +15,21 @@ library(tidyverse)
 library(dplyr)
 library(knitr)
 library(kableExtra)
+library(gridExtra)
 library(plot3D)
 library(tab)
+library(ggplot2)
 ```
 
 ## Abstract
 
-    This report analyzes how mature Canadians feel about their life, provided certain factors in life. Deriving data from the 2017 General Social Survey, this analysis utilizes a dependent variable that has two categorical levels- whether the respondent individual answered feeling generally happy, or the respondent was overall not content with life. Income of the respondent illustrated to play a role in influencing the life rating, whereas other factors in life did not portray a significance in affecting the rating. This was a meaningful discovery as higher income was found to be associated with higher life happiness level in general.   
+This report analyzes how mature Canadians feel about their life, provided certain factors in life. Deriving data from the 2017 General Social Survey, this analysis utilizes a dependent variable that has two categorical levels- whether the respondent individual answered feeling generally happy, or the respondent was overall not content with life. Income of the respondent illustrated to play a role in influencing the life rating, whereas other factors in life did not portray a significance in affecting the rating. This was a meaningful discovery as higher income was found to be associated with higher life happiness level in general.   
 
 ## Introduction
 
 Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
 
-    The goal of this analysis is to discover a relationship between the outcome variable of contentness of life and the auxiliary variables of factors in life by utilizing a logistic regression model. In this analysis, the study variable is feelings about life, and five auxiliary variables were selected to test if they indeed have a relationship with the outcome variable. Feelings about life were measured as generally happy if the rating was five or higher out of 10, while they were grouped as overall not content if the rating was lower than 5. The chosen dependent variables are age at first birth, current age of the respondent, income of the respondent, place of birth whether it is within or ouside of Canada, and future intention of having any children. While there were numerous variables in the data that were available to select, these five specific variables were intuitively picked to check the hypothesis that these will have an association with life rating. The importance of the work is that through the logistic regression model, an analysis can be built about how adult individuals in Canada feel about their life, considering the input variables. More precisely, the probability of an adult Canadian having a contented life can be calculated. Ultimately, the main goal is to observe if any of these life factors affect life rating, and if so, how large the influence is. In the subsequent sections, the model section is covered and explained using tables and the results section through a graph, while weaknesses and next steps are also discussed.
+The goal of this analysis is to discover a relationship between the outcome variable of contentness of life and the auxiliary variables of factors in life by utilizing a logistic regression model. In this analysis, the study variable is feelings about life, and five auxiliary variables were selected to test if they indeed have a relationship with the outcome variable. Feelings about life were measured as generally happy if the rating was five or higher out of 10, while they were grouped as overall not content if the rating was lower than 5. The chosen dependent variables are age at first birth, current age of the respondent, income of the respondent, place of birth whether it is within or ouside of Canada, and future intention of having any children. While there were numerous variables in the data that were available to select, these five specific variables were intuitively picked to check the hypothesis that these will have an association with life rating. The importance of the work is that through the logistic regression model, an analysis can be built about how adult individuals in Canada feel about their life, considering the input variables. More precisely, the probability of an adult Canadian having a contented life can be calculated. Ultimately, the main goal is to observe if any of these life factors affect life rating, and if so, how large the influence is. In the subsequent sections, the model section is covered and explained using tables and the results section through a graph, while weaknesses and next steps are also discussed.
 
 ## Data
 
@@ -35,29 +37,13 @@ Introduce the data, explain why it was selected. Make sure to comment on importa
 
 The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.
 
-
-## Model
-
-Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.
-
-
-```{r include=FALSE, echo=FALSE, warning=FALSE}
+```{r}
 can_pop_stats <- read.csv("popstats.csv", nrows=15) %>% 
     select(province=Geographic.name, population=Population..2016) %>% 
     filter(!(province %in% c("Canada", "Yukon", "Northwest Territories", "Nunavut", "")))
 
 gss_full <- read.csv("gss.csv")
 
-gss = gss_full %>% # Select only the variables that are used in our model
-    select(c(
-             province,
-             feelings_life,
-             age,
-             income_respondent,
-             place_birth_canada,
-             age_at_first_birth,
-             future_children_intention)) %>% drop_na
-#gss_full$future_children_intention[is.na(gss_full$future_children_intention)] <- "Don't know"
 #gss = gss_full %>% # Select only the variables that are used in our model
 #    select(c(
 #             province,
@@ -66,17 +52,27 @@ gss = gss_full %>% # Select only the variables that are used in our model
 #             income_respondent,
 #             place_birth_canada,
 #             age_at_first_birth,
-#             future_children_intention)) %>%
-#replace_na(list(
-#                "",
-#                0, 
-#                0,
-#                "Less than $25,000",
-#                "Don't know",
-#                0,
-#                "Don't know"
-#                )) %>%
-#drop_na() # Remove the NA values
+#             future_children_intention)) %>% drop_na
+gss_full$future_children_intention[is.na(gss_full$future_children_intention)] <- "Don't know"
+gss = gss_full %>% # Select only the variables that are used in our model
+    select(c(
+             province,
+             feelings_life,
+             age,
+             income_respondent,
+             place_birth_canada,
+             age_at_first_birth,
+             future_children_intention)) %>%
+replace_na(list(
+                "",
+                0, 
+                0,
+                "Less than $25,000",
+                "Don't know",
+                0,
+                "Don't know"
+                )) %>%
+drop_na() # Remove the NA values
 
 # Perform inner join on 'province' for finite population correction
 gss <- inner_join(gss, can_pop_stats, by="province")
@@ -105,6 +101,82 @@ gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
 ))
 ```
 
+
+```{r, fig.width=10, fig.height=12}
+feels_hist <- ggplot(data=gss, aes(x=feelings_life)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 1: Distribution of feelings_life")
+age_hist <- ggplot(data=gss, aes(x=age)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 2: Distribution of age")
+age_birth_hist <- ggplot(data=gss, aes(x=age_at_first_birth)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 3: Distribution of age_at_first_birth")
+
+income_bar <- ggplot(data=gss, aes(x=income_respondent)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 4: Distribution of income_respondent")
+birth_can_bar <- ggplot(data=gss, aes(x=place_birth_canada)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 5: Distribution of place_birth_canada")
+child_int_bar <- ggplot(data=gss, aes(x=future_children_intention)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 6: Distribution of future_children_intention")
+grid.arrange(grobs=list(feels_hist, 
+                        age_hist,
+                        age_birth_hist, 
+                        income_bar, 
+                        birth_can_bar, 
+                        child_int_bar), 
+             ncol=2)
+
+gss_means <- gss %>% group_by(province) %>% summarise_at(vars(-future_children_intention, -place_birth_canada, -income_respondent), mean)
+prov_feels <- ggplot(data=gss_means, aes(x=province, y=feelings_life)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 7: Mean feelings_life by province") +
+    ylab("Mean feelings_life")
+prov_age <- ggplot(data=gss_means, aes(x=province, y=age)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 8: Mean age by province") +
+    ylab("Mean age")
+prov_age_birth <- ggplot(data=gss_means, aes(x=province, y=age_at_first_birth)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 9: Mean age_at_first_birth by province") +
+    ylab("Mean age_at_first_birth")
+grid.arrange(grobs=list(prov_feels, prov_age, prov_age_birth), ncols=3)
+```
+
+```{r, fig.width=10, fig.height=6}
+scatter3D(
+          x=as.numeric(gss$age_at_first_birth), 
+          y=as.numeric(gss$age), 
+          z=as.numeric(gss$feelings_life), 
+          bty="b2", 
+          theta=50, 
+          phi=30, 
+          cex=0.5,
+          font=0.8,
+          main="Figure 10: Age at First Birth & Age vs Feelings About Life",
+          xlab="Age at First Birth", 
+          ylab="Age", 
+          zlab="Feelings about Life"
+)
+```
+
+
+## Model
+
+Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.
+
 To predict the probability of a person being happy, which we define as:
 $$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 6 \\ 0, &\text{otherwise}\end{cases} $$
 we fit a logistic regression model with some independent/predictor variables.
@@ -125,22 +197,6 @@ data.frame(
 ```
 
 The other predictor variables are `age_at_first_birth` and `age`.
-
-<!--```{r, fig.align='center'}
-scatter3D(
-          x=gss$age_at_first_birth, 
-          y=gss$age, 
-          z=gss$feelings_life, 
-          bty="b2", 
-          theta=50, 
-          phi=40, 
-          cex=0.5,
-          font=1,
-          xlab="Age at First Birth", 
-          ylab="Age", 
-          zlab="Feelings about Life"
-)
-```-->
 
 ```{r, include=FALSE, warning=FALSE, echo=FALSE}
 gss <- gss %>% mutate(happy=feelings_life>=6)
@@ -164,7 +220,7 @@ Using the GSS data, we replicated the approach used in the original survey. A si
     +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
-The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy`. For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
+The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy` ($h$). For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
 
 ## Results
 
