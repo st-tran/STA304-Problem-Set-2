@@ -41,7 +41,11 @@ The selected output variable is feelings about life, and the auxiliary variables
 
 In the data set, there were numerous variables and responses, and some variables were very similar to one another. For instance, there were two questions regarding income, one for income of the respondent and another for income of the entire family. Since income of the respondent would usually be more direct and influential to the respondent, this variable was chosen instead of the other. There were no new variables that were constructed by combining multiple others, as each variable by itself normally had several response options, and it would be confusing to mix up the variables. The key features of the survey are that it covers various important life events and factors that influence life, and so the primary objectives of the survey are well covered and represented. Its strengths are that therefore, the survey is fairly accurate in terms of representing all the variables that affect life, and the large number of respondents and the appropriate survey designs also add to the accuracy of the survey. 
 
-A drawback to the data is that because of the numerous questions and responses in the survey and gathered data, it was time consuming to review all these to choose our variables. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order which should be placed before the other. Furthermore, some weaknesses about the survey in general are that the questions could have been phrased more inclusively, and that the answer options could have been broader. For example, the variable "age at first birth" does not include males, and all males responded with "NA" to the question. However, males are broadly still affected by first child's birth, as they participate in nurturing the child. A more precise question would be with the phrase "age at first child's birth," which would permit males to answer. Moreover, the variable "sex" only represents female or male- such option for "intersex" is not included. Perhaps another category could have been added for "gender," in which respondents could have more comfortably represented themselves within the LGBTQ+ group.    
+A drawback to the data is that because of the numerous questions and responses in the survey and gathered data, it was time consuming to review all these to choose our variables. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order which should be placed before the other. Furthermore, some weaknesses about the survey in general are that the questions could have been phrased more inclusively, and that the answer options could have been broader. For example, the variable "age at first birth" does not include males, and all males responded with "NA" to the question. However, males are broadly still affected by first child's birth, as they participate in nurturing the child. A more precise question would be with the phrase "age at first child's birth," which would permit males to answer. Moreover, the variable "sex" only represents female or male- such option for "intersex" is not included. Perhaps another category could have been added for "gender," in which respondents could have more comfortably represented themselves within the LGBTQ+ group.
+
+Figures 1-6 show various visualizations of the raw data. We see that most respondents have a positive feeling about life with a bimodal (at 8 and 10), left-skewed distribution of `feelings_life`. An interesting result seen in Figure 2 is that most respondents are older than 50 and no respondents were younger than 20, despite the target population including persons 15 years of age or older. Moreover, most respondents make less than the national mean of around \$50,000 per year as seen in Figure 4. Most respondents were born in Canada and are not confident about whether they will have children in the future.
+
+Figures 7-9 show the aggregated means for all respondents across the variables `feelings_life`, `age`, and `age_at_first_birth` by province. We see from the limited range of the variables for each plot that the provinces are not too different from one another for these factors.
 
 ```{r}
 can_pop_stats <- read.csv("popstats.csv", nrows=15) %>% 
@@ -210,7 +214,7 @@ model <- svyglm(happy ~
             family=quasibinomial
 )
 ```
-Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. Then, we fitted a logistic model to the survey design, yielding the following model:
+Using the GSS data, we replicated the approach used in the original survey. A single-stage stratified sampling approach by applying finite population correction to the sample was employed, adjusting each observation by the corresponding provincial population to reduce the variation. This yielded the following model:
 \begin{align*}
     \log \left(\frac{h}{1-h}\right) =\ &\beta_0 + \beta_1x_1 + \beta_2x_2 \\
     +\ &\underbrace{\beta_{3a}x_{3a} + \beta_{3b}x_{3b} + \beta_{3c}x_{3c} + \beta_{3d}x_{3d} + \beta_{3e}x_{3e}}_{\text{dummy coding for income}} \\
@@ -224,7 +228,7 @@ The functional form of the logistic model gives the logarithm of the odds of the
 <!--Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
 
 Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.-->
-The coefficients fitted using the logistic regression model are given in Table 2. The *OR* column gives the odds ratio, *Beta (SE)* gives the logarithm of the odds ratio and corresponding standard error of the estimate. *P* gives the p-value for the significance test which evaluates the probability of encountering data as or more significant than the Wald test statistic.
+The coefficients fitted using the logistic regression model are given in Table 2. The *OR* column gives the odds ratio, *Beta (SE)* gives the logarithm of the odds ratio and corresponding standard error of the estimate. *P* gives the p-value for the significance test which evaluates the probability of encountering data as or more significant than the Wald test statistic under the assumption that the population parameter coefficient of interest is equal to 0. The Wald test is relevant because of the log-transformed odds ratio; the model summary summarizes the results of this test to each of the parameters.
 
 ```{r}
 model_summary <- model %>% tabglm(columns=c("or", "beta.se", "p"), latex=T)
@@ -257,12 +261,12 @@ model_summary %>% kable(row.names=T, escape=F, caption="Logistic Regression Mode
 ```
 The model has the following interpretations:
 
-- The intercept term has no meaningful interpretation and it is statistically significant with a very small p-value.
-- The continuous variables `age_at_first_birth`, `age` very slightly affect the model with odds-ratios slightly off from 1.
-- The categorical variables `place_birth_canada` and `future_children_intention` make a large difference to the odds ratio with odds-ratios near 0, but this is probably due to a flaw in the survey design which we will discuss in the Weaknesses section of this report.
+- The intercept term has no meaningful interpretation but it is statistically significant with a very small p-value. It shifts the overall model prediction by $e^{\beta_0}$.
+- The continuous variables `age_at_first_birth`, `age` don't affect the model by much with odds-ratios slightly off from 1. $\beta_1$ is statistically significant but $\beta_2$ is not, with a p-value of 0.35, and so we fail to reject the null hypothesis that $\beta_2\neq 0$.
+- We see a very large prediction of the odds ratio for $\beta_{5e}$ (`future_children_intention`=*Definitely yes*) which is likely caused by the large number of people who voted *Don't know*. The other parameters $\beta_{5i}$ for other levels of `future children intention` are not statistically significant, which is also due to the same reason. However, we included this factor in the model because it is intuitive that living a happy life would be necessary to raising and taking care of children. Despite this, there are certainly outliers in reality in low-income households, wherein there are many children in the same household.
 - `income_respondent` is a meaningful variable in this model. For all six levels, the odds ratio is greater than 1 which implies that each increase in the respondent's income results in an increase in the log odds of being happy compared to the baseline.
 
-Using a variety of parameters with this model, we obtain the following histogram that shows the class distribution of happiness.
+Using a variety of parameters with this model where each combination has a uniform probability of being chosen, we obtain the following histogram (Figure 11) that shows the class distribution of happiness across Canada. Note that the bins are lower-bound inclusive, explaining a number of predictions appearing beyond 1 (these probabilities are 1). The probabilities are very high, but that may be due to an imbalance in the survey data -- this will be discussed in the Weaknesses section of the report.
 
 ```{r, fig.width=10, fig.height=3}
 or_probs <- as.data.frame(predict(model, type="response"))
@@ -298,3 +302,9 @@ Bibliography:
 3. Population and Dwelling Count Highlight Tables, 2016 Census. (2019, February 20). Retrieved October 17, 2020, from Statistics Canada, Canada website: https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/pd-pl/Table.cfm?Lang=Eng&T=101&S=50&O=A
 
 4. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
+
+\textcolor{red}{needs to be cited}
+
+https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110023901
+
+https://www12.statcan.gc.ca/census-recensement/2016/as-sa/98-200-x/2016012/98-200-x2016012-eng.cfm
