@@ -15,8 +15,10 @@ library(tidyverse)
 library(dplyr)
 library(knitr)
 library(kableExtra)
+library(gridExtra)
 library(plot3D)
 library(tab)
+library(ggplot2)
 ```
 
 ## Abstract
@@ -33,6 +35,7 @@ The goal of this analysis is to discover a relationship between the outcome vari
 
 Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 
+<<<<<<< HEAD
 The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a relationship between the y and x variables. All of the data were pulled from the General Social Survey - Family (GSS) that was conducted in 2017. The 2017 survey data set was selected because it was a relatively recent set of data, therefore more interesting and purposeful to observe as it reflects comparatively newer and current responses. Survey data includes a target population of non-institutionalized individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest.
 20,602 respondents had responded to the survey, and the number of respondents is also the sample size. This survey is a cross-sectional design and uses a two-stage sampling design. During the first stage, the sampling groups are the groups of telephone numbers, and the second stage units are people in the identified households. The sampling frame is Statistics Canada's common telephone frame, which combines landline and cellular telephone numbers that are from the Address Register. Survey data were collected through self-completed online questionnaires and telephone interviews, handled both in English and French. Since responding to the survey was voluntary, there were non-responses, and survey respondents were allowed to have non-responses within their survey answers as well. Also, although there were households without telephone services- generally, these exclusions are small, and so introduced biases were expected to be minor too. 
 In the data set, there were numerous variables and responses, and some variables were very similar to one another. For instance, there were two questions regarding income, one for income of the respondent and another for income of the entire family. Since income of the respondent would usually be more direct and influential to the respondent, this variable was chosen instead of the other. There were no new variables that were constructed by combining multiple others, as each variable by itself normally had several response options, and it would be confusing to mix up the variables. The key features of the survey are that it covers various important life events and factors that influence life, and so the primary objectives of the survey are well covered and represented. Its strengths are that therefore, the survey is fairly accurate in terms of representing all the variables that affect life, and the large number of respondents and the appropriate survey designs also add to the accuracy of the survey. 
@@ -44,22 +47,17 @@ Introduce the selected model here. It is expected that you will use some mathema
 
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE}
+=======
+The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a linear relationship between the y and x variables. A drawback to the data is that because of the numerous 'NA' responses, our population data size greatly decreased from the original sampled population number. Another drawback to the data is that there are numerous vague responses such as "Don't know" or "Unsure", which are difficult to place in order.
+
+```{r}
+>>>>>>> 77e90a84d97cc3faaacf7286d58454fe3fe900c4
 can_pop_stats <- read.csv("popstats.csv", nrows=15) %>% 
     select(province=Geographic.name, population=Population..2016) %>% 
     filter(!(province %in% c("Canada", "Yukon", "Northwest Territories", "Nunavut", "")))
 
 gss_full <- read.csv("gss.csv")
 
-gss = gss_full %>% # Select only the variables that are used in our model
-    select(c(
-             province,
-             feelings_life,
-             age,
-             income_respondent,
-             place_birth_canada,
-             age_at_first_birth,
-             future_children_intention)) %>% drop_na
-#gss_full$future_children_intention[is.na(gss_full$future_children_intention)] <- "Don't know"
 #gss = gss_full %>% # Select only the variables that are used in our model
 #    select(c(
 #             province,
@@ -68,17 +66,27 @@ gss = gss_full %>% # Select only the variables that are used in our model
 #             income_respondent,
 #             place_birth_canada,
 #             age_at_first_birth,
-#             future_children_intention)) %>%
-#replace_na(list(
-#                "",
-#                0, 
-#                0,
-#                "Less than $25,000",
-#                "Don't know",
-#                0,
-#                "Don't know"
-#                )) %>%
-#drop_na() # Remove the NA values
+#             future_children_intention)) %>% drop_na
+gss_full$future_children_intention[is.na(gss_full$future_children_intention)] <- "Don't know"
+gss = gss_full %>% # Select only the variables that are used in our model
+    select(c(
+             province,
+             feelings_life,
+             age,
+             income_respondent,
+             place_birth_canada,
+             age_at_first_birth,
+             future_children_intention)) %>%
+replace_na(list(
+                "",
+                0, 
+                0,
+                "Less than $25,000",
+                "Don't know",
+                0,
+                "Don't know"
+                )) %>%
+drop_na() # Remove the NA values
 
 # Perform inner join on 'province' for finite population correction
 gss <- inner_join(gss, can_pop_stats, by="province")
@@ -107,6 +115,82 @@ gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
 ))
 ```
 
+
+```{r, fig.width=10, fig.height=12}
+feels_hist <- ggplot(data=gss, aes(x=feelings_life)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 1: Distribution of feelings_life")
+age_hist <- ggplot(data=gss, aes(x=age)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 2: Distribution of age")
+age_birth_hist <- ggplot(data=gss, aes(x=age_at_first_birth)) + 
+    geom_histogram(bins=30) + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 3: Distribution of age_at_first_birth")
+
+income_bar <- ggplot(data=gss, aes(x=income_respondent)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 4: Distribution of income_respondent")
+birth_can_bar <- ggplot(data=gss, aes(x=place_birth_canada)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 5: Distribution of place_birth_canada")
+child_int_bar <- ggplot(data=gss, aes(x=future_children_intention)) + 
+    geom_bar() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    ggtitle("Figure 6: Distribution of future_children_intention")
+grid.arrange(grobs=list(feels_hist, 
+                        age_hist,
+                        age_birth_hist, 
+                        income_bar, 
+                        birth_can_bar, 
+                        child_int_bar), 
+             ncol=2)
+
+gss_means <- gss %>% group_by(province) %>% summarise_at(vars(-future_children_intention, -place_birth_canada, -income_respondent), mean)
+prov_feels <- ggplot(data=gss_means, aes(x=province, y=feelings_life)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 7: Mean feelings_life by province") +
+    ylab("Mean feelings_life")
+prov_age <- ggplot(data=gss_means, aes(x=province, y=age)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 8: Mean age by province") +
+    ylab("Mean age")
+prov_age_birth <- ggplot(data=gss_means, aes(x=province, y=age_at_first_birth)) + 
+    geom_point() + 
+    theme(axis.text.x=element_text(angle=45, hjust=1), plot.title=element_text(hjust=0.5)) +
+    ggtitle("Figure 9: Mean age_at_first_birth by province") +
+    ylab("Mean age_at_first_birth")
+grid.arrange(grobs=list(prov_feels, prov_age, prov_age_birth), ncols=3)
+```
+
+```{r, fig.width=10, fig.height=6}
+scatter3D(
+          x=as.numeric(gss$age_at_first_birth), 
+          y=as.numeric(gss$age), 
+          z=as.numeric(gss$feelings_life), 
+          bty="b2", 
+          theta=50, 
+          phi=30, 
+          cex=0.5,
+          font=0.8,
+          main="Figure 10: Age at First Birth & Age vs Feelings About Life",
+          xlab="Age at First Birth", 
+          ylab="Age", 
+          zlab="Feelings about Life"
+)
+```
+
+
+## Model
+
+Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.
+
 To predict the probability of a person being happy, which we define as:
 $$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 6 \\ 0, &\text{otherwise}\end{cases} $$
 we fit a logistic regression model with some independent/predictor variables.
@@ -127,22 +211,6 @@ data.frame(
 ```
 
 The other predictor variables are `age_at_first_birth` and `age`.
-
-<!--```{r, fig.align='center'}
-scatter3D(
-          x=gss$age_at_first_birth, 
-          y=gss$age, 
-          z=gss$feelings_life, 
-          bty="b2", 
-          theta=50, 
-          phi=40, 
-          cex=0.5,
-          font=1,
-          xlab="Age at First Birth", 
-          ylab="Age", 
-          zlab="Feelings about Life"
-)
-```-->
 
 ```{r, include=FALSE, warning=FALSE, echo=FALSE}
 gss <- gss %>% mutate(happy=feelings_life>=6)
@@ -166,7 +234,7 @@ Using the GSS data, we replicated the approach used in the original survey. A si
     +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
-The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy`. For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
+The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy` ($h$). For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
 
 ## Results
 
