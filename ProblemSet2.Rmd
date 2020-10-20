@@ -8,6 +8,8 @@ header-includes:
     - \usepackage{float}
 ---
 
+Code and data supporting this analysis is available at: https://github.com/st-tran/STA304-Problem-Set-2.git
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(survey)
@@ -27,13 +29,9 @@ This report analyzes how mature Canadians feel about their life, provided certai
 
 ## Introduction
 
-Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
-
-The goal of this analysis is to discover a relationship between the outcome variable of contentedness of life and the auxiliary variables of factors in life by utilizing a logistic regression model. In this analysis, the study variable is feelings about life, and five auxiliary variables were selected to test if they indeed have a relationship with the outcome variable. Feelings about life were measured as generally happy if the rating was five or higher out of 10, while they were grouped as overall not content if the rating was lower than 5. The chosen dependent variables are age at first birth, current age of the respondent, income of the respondent, place of birth whether it is within or outside of Canada, and future intention of having any children. While there were numerous variables in the data that were available to select, these five specific variables were intuitively picked to check the hypothesis that these will have an association with life rating. The importance of the work is that through the logistic regression model, an analysis can be built about how adult individuals in Canada feel about their life, considering the input variables. More precisely, the probability of an adult Canadian having a contented life can be calculated. Ultimately, the main goal is to observe if any of these life factors affect life rating, and if so, how large the influence is. In the subsequent sections, the model section is covered and explained using tables and the results section through a graph, while weaknesses and next steps are also discussed.
+The goal of this analysis is to discover a relationship between the outcome variable of contentedness of life and the auxiliary variables of factors in life by utilizing a logistic regression model. In this analysis, the study variable is feelings about life, and five auxiliary variables were selected to test if they indeed have a relationship with the outcome variable. Feelings about life were measured as generally happy if the rating was six or higher out of ten, while they were grouped as overall not content if the rating was lower than six. The chosen independent variables are age at first birth, current age of the respondent, income of the respondent, place of birth whether it is within or outside of Canada, and future intention of having any children. While there were numerous variables in the data that were available to select, these five specific variables were intuitively picked to check the hypothesis that these will have an association with life rating. The importance of the work is that through the logistic regression model, an analysis can be built about how adult individuals in Canada feel about their life, considering the input variables. More precisely, the probability of an adult Canadian having a contented life can be calculated. Ultimately, the main goal is to observe if any of these life factors affect life rating, and if so, how large the influence is. In the subsequent sections, the model section is covered and explained using tables and the results section through a graph, while weaknesses and next steps are also discussed.
 
 ## Data
-
-Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 
 The selected output variable is feelings about life, and the auxiliary variables are age of the respondent, age at first birth, place of birth (whether it was in Canada or not), income of the respondent, and intention of having future children. We chose this study variable in the intent to scrutinize the life satisfaction rating of Canadians, whether this is dependent on certain factors in life. Also, we decided on the specific input variables because intuitively, they are the most suitable data for our hypothesis and to prove that indeed, there is a relationship between the y and x variables. All of the data were pulled from the General Social Survey - Family (GSS) that was conducted in 2017. The 2017 survey data set was selected because it was a relatively recent set of data, therefore more interesting and purposeful to observe as it reflects comparatively newer and current responses. Survey data includes a target population of non-institutionalized individuals who are 15 years of age or older in the 10 provinces of Canada. The survey's primary objectives are to gather data on social trends to monitor changes in the living conditions of Canadians throughout life, and to provide information on specific social policy issues of current interest.
 
@@ -46,6 +44,8 @@ A drawback to the data is that because of the numerous questions and responses i
 Figures 1-6 show various visualizations of the raw data. We see that most respondents have a positive feeling about life with a bimodal (at 8 and 10), left-skewed distribution of `feelings_life`. An interesting result seen in Figure 2 is that most respondents are older than 50 and no respondents were younger than 20, despite the target population including persons 15 years of age or older. Moreover, most respondents make less than the national mean of around \$50,000 per year as seen in Figure 4. Most respondents were born in Canada and are not confident about whether they will have children in the future.
 
 Figures 7-9 show the aggregated means for all respondents across the variables `feelings_life`, `age`, and `age_at_first_birth` by province. We see from the limited range of the variables for each plot that the provinces are not too different from one another for these factors.
+
+Figure 10 is a 3D scatterplot of `age` and `age_at_first_birth` against `feelings_life`, where the points are colour-coded corresponding to the value of `feelings_life`. We see that most of the responses are clustered towards a high value for `feelings_life`, low value for `age_at_first_birth`, and medium-high value for `age`.
 
 ```{r}
 can_pop_stats <- read.csv("popstats.csv", nrows=15) %>% 
@@ -101,7 +101,6 @@ gss$future_children_intention <- factor(gss$future_children_intention, levels=c(
     "Definitely yes"
 ))
 ```
-
 
 ```{r, fig.width=10, fig.height=12}
 feels_hist <- ggplot(data=gss, aes(x=feelings_life)) + 
@@ -169,18 +168,15 @@ scatter3D(
           main="Figure 10: Age at First Birth & Age vs Feelings About Life",
           xlab="Age at First Birth", 
           ylab="Age", 
-          zlab="Feelings about Life"
+          zlab="Feelings About Life"
 )
 ```
 
-
 ## Model
-
-Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.
 
 To predict the probability of a person being happy, which we define as:
 $$ \text{Prob}(h):= \begin{cases}1, &\text{if feelings\_life}\geq 6 \\ 0, &\text{otherwise}\end{cases} $$
-we fit a logistic regression model with some independent/predictor variables.
+we fit a logistic regression model with some independent/ predictor variables.
 
 ```{r}
 data.frame(
@@ -221,13 +217,20 @@ Using the GSS data, we replicated the approach used in the original survey. A si
     +\ &\underbrace{\beta_{4a}x_{4a} + \beta_{4b}x_{4b}}_{\text{dummy coding for place birth Canada}} \\
     +\ &\underbrace{\beta_{5a}x_{5a} + \beta_{5b}x_{5b} + \beta_{5c}x_{5c} + \beta_{5d}x_{5d} + \beta_{5e}x_{5e}}_{\text{dummy coding for future children intention}}
 \end{align*}
+
 The functional form of the logistic model gives the logarithm of the odds of the outcome variable -- in this case, the binary variable `happy` ($h$). For each of the categorical variables in Table 1, we use dummy variable coding with the variable at the top representing the baseline, in order to be able to assess what effect, if any, moving to a category would have compared to the baseline. 
+
+Hypothetical cases of the model are that if income is higher, individuals would be able to enjoy a more comfortable life not having to worry about their expenses, and therefore life rating would be higher. While there are age at first birth, age, income of the respondent, place of birth, and future children intention for independent variables and feelings about life as the dependent variable- the independent variables enter the model specifically because for instance, income of the respondent would more accurately portray the financial circumstance of him or her than income of the family. Also, responses to income of the respondent was categorized in an increasing manner for income. 
+Caveats in the model are that male responses are not captured for the variable "age at first birth," and that the model assumes males to be the baseline of the variable. The logistic regression equation is determined by the addition of each independent variable calculated to find probability of having a happy life. Since the outcome of interest is binary- either the individual has a happy life or does not have a happy life, the model is suitable in the sense that the goal is to observe who is living a satisfied level and who is not, and if more people are living a contented life or not. 
+
+Because the log function of the logistic regression model is one-to-one, if the regression equation is of a high value, then it would mean the numbers for the variables are also of high values. The justification for applying this model is that the general goal of the study is to find if an average adult Canadian is having a happy or unhappy life, thus the logistic regression would work because of its binary outcome model. Although a linear regression model could have also identified if there is a relationship between a given independent variable and the dependent variable, this model would be limited in that it would only allow one independent variable to be considered and only illustrate a linear relationship. Working with an ordinal logistic regression model may allow more levels of life ratings for the independent variable as well, but this may be more complicated to use for dealing with a lot of variables. The chosen independent variables are a suitable fit for this study as some are categorical and some are numerical, showing both sides. If the variable responses were all categorical or numerical, the study might not have been able to cover a greater picture of the details in the data set.
 
 ## Results
 
 <!--Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
 
 Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.-->
+
 The coefficients fitted using the logistic regression model are given in Table 2. The *OR* column gives the odds ratio, *Beta (SE)* gives the logarithm of the odds ratio and corresponding standard error of the estimate. *P* gives the p-value for the significance test which evaluates the probability of encountering data as or more significant than the Wald test statistic under the assumption that the population parameter coefficient of interest is equal to 0. The Wald test is relevant because of the log-transformed odds ratio; the model summary summarizes the results of this test to each of the parameters.
 
 ```{r}
@@ -259,52 +262,67 @@ model_summary$Variable <- model_summary$Variable %>% str_replace_all("_", "\\\\_
 model_summary$Variable <- model_summary$Variable %>% str_replace_all("\\$", "\\\\$")
 model_summary %>% kable(row.names=T, escape=F, caption="Logistic Regression Model Summary") %>% kable_styling(latex_options="HOLD_position")
 ```
+
 The model has the following interpretations:
 
 - The intercept term has no meaningful interpretation but it is statistically significant with a very small p-value. It shifts the overall model prediction by $e^{\beta_0}$.
-- The continuous variables `age_at_first_birth`, `age` don't affect the model by much with odds-ratios slightly off from 1. $\beta_1$ is statistically significant but $\beta_2$ is not, with a p-value of 0.35, and so we fail to reject the null hypothesis that $\beta_2\neq 0$.
+- The continuous variables `age_at_first_birth` and `age` don't affect the model by much with odds-ratios slightly off from 1. $\beta_1$ is statistically significant but $\beta_2$ is not, with a p-value of 0.35, and so we fail to reject the null hypothesis that $\beta_2\neq 0$.
 - We see a very large prediction of the odds ratio for $\beta_{5e}$ (`future_children_intention`=*Definitely yes*) which is likely caused by the large number of people who voted *Don't know*. The other parameters $\beta_{5i}$ for other levels of `future children intention` are not statistically significant, which is also due to the same reason. However, we included this factor in the model because it is intuitive that living a happy life would be necessary to raising and taking care of children. Despite this, there are certainly outliers in reality in low-income households, wherein there are many children in the same household.
 - `income_respondent` is a meaningful variable in this model. For all six levels, the odds ratio is greater than 1 which implies that each increase in the respondent's income results in an increase in the log odds of being happy compared to the baseline.
-
-Using a variety of parameters with this model where each combination has a uniform probability of being chosen, we obtain the following histogram (Figure 11) that shows the class distribution of happiness across Canada. Note that the bins are lower-bound inclusive, explaining a number of predictions appearing beyond 1 (these probabilities are 1). The probabilities are very high, but that may be due to an imbalance in the survey data -- this will be discussed in the Weaknesses section of the report.
-
-```{r, fig.width=10, fig.height=3}
-or_probs <- as.data.frame(predict(model, type="response"))
-ggplot(or_probs, aes(x=response)) + 
-    geom_histogram(bins=30) +
-    ggtitle("Predicted Distribution of Happiness") + xlab("Probability of Being Happy")
-```
 
 ## Discussion
 
 <!--Here you will discuss conclusions drawn from the results and comment on how it relates to the original goal of the study (which was specified in the Introduction).-->
 
+The assumptions used to fit the logistic regression model generally do not reflect our assumptions on real-world relationships between happiness and factors that affect one's standard of living. While some of the factors we set out to investigate, namely: age, intentions of having children in the future, and whether or not they were born in Canada, were all found to be statistically insignificant, it is possible that there are confounding factors that may reveal a relationship. These results did not fit with our initial hypothesis that they would all contribute to our measure of Canadians' happiness.
 
+It was seen that most respondents responded that they are very content with their lives, with a mean rating of `r gss$feelings_life %>% as.numeric %>% mean` which doesn't fall in line with reality. As we will discuss in the Weaknesses section of the report, there is likely response bias that affected the General Social Survey. Due to this, our model was biased towards predicting the upper end of the range. 
+
+This can be seen in Figure 11. Using a variety of parameters with this model in which each combination has a uniform probability of being chosen, we obtain the following histogram that shows the class distribution of happiness across Canada. Note that the bins are lower-bound inclusive, explaining a number of predictions appearing beyond 1 (these probabilities are 1). 
+
+```{r, fig.width=10, fig.height=3}
+or_probs <- as.data.frame(predict(model, type="response"))
+ggplot(or_probs, aes(x=response)) + 
+    geom_histogram(bins=30) +
+    ggtitle("Figure 11: Predicted Distribution of Happiness") + xlab("Probability of Being Happy")
+```
+
+Indeed, there are further studies to be done for comparison to our results. Differences in the survey design such as a larger sample size, different sampling method, or change in the target population could affect the data that was analyzed. As shown in the Data section, most respondents were more than 50 years old. The other factors were also skewed, but perhaps a Bayesian model could be fit to the data with assumptions on the prior distributions of these variables to expose a more meaningful relationship. Alternatively, further post-stratification may be employed to make the sample more representative of the Canadian population, adding more factors that were available in the GSS data set.
 
 # Weaknesses
 
 <!--Here we discuss weaknesses of the study, data, analysis, etc. You can also discuss areas for improvement.-->
 
+There were some weaknesses found in the data set and the study as well. Recalling one of the originally discussed weaknesses, the variable "age at first birth" does not capture valid responses for males who would have otherwise been able to answer a question with a phrase such as "age at first child's birth." Furthermore, the data may not represent all of adult Canadians correctly as those in the three territories were excluded. Also, because the survey responses were assembled voluntarily, again the sample from the target population of mature Canadians might not have been detained properly- it is possible that only those who are more eager to answer questions or those with more available time might have responded to the survey. And because the survey was provided in the form of an online questionnaire or a telephone interview, those who have low vision or are hard of hearing might not have been able to answer the survey even if they wanted to, and these conditions could generally apply more to seniors. These weaknesses could have made the results more biased for the analysis. 
+
+For instance, the data mostly had high ratings for feelings about life- this could have happened because if people are not satisfied with their life, they may not wish to pick up the phone and interact with another individual on the other line or not involve themselves in extra tasks such as fulfilling a non-mandatory survey. Similarly, even if they actually rate their life on the lower scale, they may falsely provide a higher rating, thinking that a higher life rating would be a desired response. Then the final data set would contain social desirability bias for response bias. On a similar note, due to some respondents possibly wishing to appear to be in a more favourable financial situation or to have a more advanced level of education, they might have given inflated responses, producing prestige bias. Areas for improvement would be to create a more inclusive survey overall- the population would be more representative if the three territories of Canada along with the ten provinces were included. Also, as noted previously, the questions and responses could be phrased in a more inclusive form or have wider options to avoid 'NA' responses.
+
 # Next Steps
 
 <!--Here you discuss subsequent work to be done after this report. This can include next steps in terms of statistical analysis (perhaps there is a more efficient algorithm available, or perhaps there is a caveat in the data that would allow for some new technique). Future steps should also be specified in terms of the study setting (eg. including a follow-up survey on something, or a subsequent study that would complement the conclusions of your report).-->
 
+After this report, it may be interesting to analyze the same study variable of life rating utilizing similar independent variables. For example, the variables "income of the respondent" and "grandparents still living" are two differently categorized variables. However, "income of the respondent" and "income of the family" are alike in that they both are "income." By replacing the independent variables used in the analysis with these closely related ones, the analysis can be repeated to illustrate some results. Alternatively, a very specific study can be completed by simulating a linear regression model incorporating just one independent variable and a dependent variable, such as if age at first marriage has a positive or negative linear relationship with life rating. A caveat in the data was that a lot of these independent variables to life rating had "NA" responses, so in a future study, it may be worthwhile to choose variables with the smallest number of "NA" responses to avoid nonresponse bias.
 
+In a potential future follow-up survey, it may be useful to revisit the male respondents and ask the "age at first birth" question again, rephrasing it to "age at first child's birth." Then once those who have experienced first child's birth provide their answers, this variable's responses can be updated. Another interesting subsequent study may be to conduct the same study with the same respondents a few years later. This will fix some variable responses as they do not change, such as place of birth. However, age would have changed definitely, and responses to other questions such as income or future children intention may have changed. It would be notable to observe if there are any significant changes to life rating because of these changes in question responses. Finally, another more advanced model that can be applied is the ordinal logistic regression model. As it is an extension to the binary logistic regression model, it would be able to produce not just the "happy" and "unhappy" life rating outcomes, but each actual level of feelings about life.
 
 ## References
 
 Bibliography:
 
-1. General Social Survey: An Overview, 2019. (2019, February 20). Retrieved October 12, 2020, from Statistics Canada, Canada website:  https://www150.statcan.gc.ca/n1/pub/89f0115x/89f0115x2019001-eng.htm
+1. Children living in low-income households. (2017, September 13). Retrieved October 19, 2020, from Statistics Canada, Canada website: https://www12.statcan.gc.ca/census-recensement/2016/as-sa/98-200-x/2016012/98-200-x2016012-eng.cfm
 
-2. General Social Survey - Family (GSS). (2019, February 7). Retrieved October 12, 2020, from Statistics Canada, Canada website: https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
+2. General Social Survey: An Overview, 2019. (2019, February 20). Retrieved October 12, 2020, from Statistics Canada, Canada website:  https://www150.statcan.gc.ca/n1/pub/89f0115x/89f0115x2019001-eng.htm
 
-3. Population and Dwelling Count Highlight Tables, 2016 Census. (2019, February 20). Retrieved October 17, 2020, from Statistics Canada, Canada website: https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/pd-pl/Table.cfm?Lang=Eng&T=101&S=50&O=A
+3. General Social Survey - Family (GSS). (2019, February 7). Retrieved October 12, 2020, from Statistics Canada, Canada website: https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=4501
 
-4. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
+4. Grimm, P.(2010). Social Desirability Bias. Wiley Online Library.  https://doi.org/10.1002/9781444316568.wiem02057
 
-\textcolor{red}{needs to be cited}
+5. Income of individuals by age group, sex and income source, Canada, provinces and selected census metropolitan areas. (2020, October 19). Retrieved October 19, 2020, from Statistics Canada, Canada website: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110023901
 
-https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110023901
+6. Population and Dwelling Count Highlight Tables, 2016 Census. (2019, February 20). Retrieved October 17, 2020, from Statistics Canada, Canada website: https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/pd-pl/Table.cfm?Lang=Eng&T=101&S=50&O=A
 
-https://www12.statcan.gc.ca/census-recensement/2016/as-sa/98-200-x/2016012/98-200-x2016012-eng.cfm
+7. Sheather, S. J. (2009). A modern approach to regression with R. Springer. https://books-scholarsportal-info.myaccess.library.utoronto.ca/en/read?id=/ebooks/ebooks0/springer/2010-02-11/1/9780387096087#page=1
+
+8. Wiley, J. F., Pace, L. A. (2015). Beginning R: An Introduction to Statistical Programming. Apress. https://books-scholarsportal-info.myaccess.library.utoronto.ca/en/read?id=/ebooks/ebooks3/springer/2017-08-17/1/9781484203736#page=1
+
+9. Wu, Changbao, and Mary E. Thompson. "Basic Concepts in Survey Sampling." Sampling Theory and Practice. Springer, Cham, 2020. 3-160.
